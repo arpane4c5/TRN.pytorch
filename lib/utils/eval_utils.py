@@ -112,3 +112,10 @@ def compute_result(class_index, score_metrics, target_metrics, save_dir, result_
             print('Saved the result to {}'.format(osp.join(save_dir, result_file)))
 
     return result['mAP']
+
+
+#    # Remove ambiguous (21)
+#    if target_metrics.shape[-1] > 20:   # For THUMOS
+#        valid_index = np.where(target_metrics[:, 21]!=1)[0]
+#    else:           # For all the rows
+#        valid_index = np.array(list(range(target_metrics.shape[0])))

@@ -81,9 +81,42 @@ class THUMOSFeatureExtractor(nn.Module):
             fusion_input = motion_input
         return self.input_linear(fusion_input)
 
+
+class CRICKETFeatureExtractor(nn.Module):
+    def __init__(self, args):
+        super(CRICKETFeatureExtractor, self).__init__()
+
+        if args.inputs in ['camera', 'motion', 'multistream']:
+            self.with_camera = 'motion' not in args.inputs
+            self.with_motion = 'camera' not in args.inputs
+        else:
+            raise(RuntimeError('Unknown inputs of {}'.format(args.inputs)))
+
+        if self.with_camera and self.with_motion:
+            self.fusion_size = 3600 + 1152  #C3D: 4096 , OF: 1152  2048 + 1024
+        elif self.with_camera:
+            self.fusion_size = 3600  # 2048
+        elif self.with_motion:
+            self.fusion_size = 1152 # C3D: 4096 , OF: 1152  # 1024
+
+        self.input_linear = nn.Sequential(
+            nn.Linear(self.fusion_size, self.fusion_size),
+            nn.ReLU(inplace=True),
+        )
+
+    def forward(self, camera_input, motion_input):
+        if self.with_camera and self.with_motion:
+            fusion_input = torch.cat((camera_input, motion_input), 1)
+        elif self.with_camera:
+            fusion_input = camera_input
+        elif self.with_motion:
+            fusion_input = motion_input
+        return self.input_linear(fusion_input)
+
 _FEATURE_EXTRACTORS = {
     'HDD': HDDFeatureExtractor,
     'THUMOS': THUMOSFeatureExtractor,
+    'CRICKET': CRICKETFeatureExtractor,
 }
 
 def build_feature_extractor(args):

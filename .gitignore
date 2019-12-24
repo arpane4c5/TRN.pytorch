@@ -17,6 +17,10 @@
 
 data/HDD
 data/THUMOS
+data/CRICKET
+data/data_info_back.json
+data/data_info_sample_back.json
+cricket_highlights/
 
 model_zoo/*
 
