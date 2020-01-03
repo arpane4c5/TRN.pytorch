@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     # generate JSON file with config information
     class_index = ["non-stroke", "stroke"]
-    write_data_info(class_index, train_lst, val_lst)
+    write_data_info(class_index, train_lst, test_lst)
 
     # Write targets for list of Highlight videos 
     for video_prefix in train_lst:

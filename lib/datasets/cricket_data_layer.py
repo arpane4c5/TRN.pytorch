@@ -13,6 +13,8 @@ class TRNCRICKETDataLayer(data.Dataset):
         self.enc_steps = args.enc_steps
         self.dec_steps = args.dec_steps
         self.training = phase=='train'
+        
+        c3d_window = 16 if 'c3dFinetuned' in self.motion_feature else 0
 
         self.inputs = []
         # iterate on the training or test videos (sessions is list of vidnames)
@@ -21,8 +23,8 @@ class TRNCRICKETDataLayer(data.Dataset):
             # reshape the target to L x 2
             seed = np.random.randint(self.enc_steps) if self.training else 0
             for start, end in zip(
-                range(seed, target.shape[0] - self.dec_steps, self.enc_steps),
-                range(seed + self.enc_steps, target.shape[0] - self.dec_steps, self.enc_steps)):
+                range(seed, target.shape[0] - self.dec_steps - c3d_window, self.enc_steps),
+                range(seed + self.enc_steps, target.shape[0] - self.dec_steps - c3d_window, self.enc_steps)):
                 enc_target = target[start:end]
                 dec_target = self.get_dec_target(target[start:end + self.dec_steps])
                 self.inputs.append([

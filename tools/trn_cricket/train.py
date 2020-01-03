@@ -14,11 +14,11 @@ from models import build_model
 
 def main(args):
     this_dir = osp.join(osp.dirname(__file__), '.')
-    save_dir = osp.join(this_dir, 'checkpoints')
+    save_dir = osp.join(this_dir, 'checkpoints_c3d17_main')
     if not osp.isdir(save_dir):
         os.makedirs(save_dir)
     command = 'python ' + ' '.join(sys.argv)
-    logger = utl.setup_logger(osp.join(this_dir, 'log.txt'), command=command)
+    logger = utl.setup_logger(osp.join(this_dir, 'log_main.txt'), command=command)
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     utl.set_seed(int(args.seed))

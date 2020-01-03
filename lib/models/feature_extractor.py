@@ -93,11 +93,11 @@ class CRICKETFeatureExtractor(nn.Module):
             raise(RuntimeError('Unknown inputs of {}'.format(args.inputs)))
 
         if self.with_camera and self.with_motion:
-            self.fusion_size = 3600 + 1152  #C3D: 4096 , OF: 1152  2048 + 1024
+            self.fusion_size = 3600 + 4096  #C3D: 4096 , OF: 1152  2048 + 1024
         elif self.with_camera:
             self.fusion_size = 3600  # 2048
         elif self.with_motion:
-            self.fusion_size = 1152 # C3D: 4096 , OF: 1152  # 1024
+            self.fusion_size = 4096 # C3D: 4096 , OF: 1152  # 1024
 
         self.input_linear = nn.Sequential(
             nn.Linear(self.fusion_size, self.fusion_size),

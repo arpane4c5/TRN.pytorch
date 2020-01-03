@@ -13,6 +13,14 @@ import utils as utl
 from configs.cricket import parse_trn_args as parse_args
 from models import build_model
 
+# Local Paths
+VAL_DATASET = "/home/arpan/VisionWorkspace/Cricket/dataset_25_fps_test_set"
+VAL_LABELS = "/home/arpan/VisionWorkspace/Cricket/dataset_25_fps_test_set_labels"
+# Server Paths
+if os.path.exists("/opt/datasets/cricket/ICC_WT20"):
+    VAL_DATASET = "/home/arpan/DATA_Drive/Cricket/dataset_25_fps_test_set"
+    VAL_LABELS = "/home/arpan/DATA_Drive/Cricket/dataset_25_fps_test_set_labels"
+
 def to_device(x, device):
     return x.unsqueeze(0).to(device)
 
@@ -69,6 +77,20 @@ def getVidLocalizations(binaryPreds):
         vLocalizations.append((act_beg, act_end))
         
     return vLocalizations
+
+
+# function to remove the action segments that have less than "epsilon" frames.
+def filter_action_segments(shots_dict, epsilon=10):
+    filtered_shots = {}
+    for k,v in shots_dict.items():
+        vsegs = []
+        vscores = []
+        for idx, segment in enumerate(v["segments"]):
+            if (segment[1]-segment[0] >= epsilon):
+                vsegs.append(segment)
+                vscores.append(v["scores"][idx])
+        filtered_shots[k] = {"segments":vsegs, "scores":vscores}
+    return filtered_shots
 
 
 def main(args):
@@ -137,8 +159,20 @@ def main(args):
         print('Processed session {}, {:2} of {}, running time {:.2f} sec'.format(
             session, session_idx, len(args.test_session_set), end - start))
         
-        localizations["ICC WT20/"+session+".avi"] = getScoredLocalizations(
-                                vid_enc_score_metrics, 1)
+        if osp.isfile(osp.join(VAL_DATASET, session+'.mp4')):
+            session = session + '.mp4'
+        else:
+            session = session + '.avi'
+            
+        if session.startswith("v_"):
+            localizations["youtube/"+session] = getScoredLocalizations(vid_enc_score_metrics, 1)
+        elif session.startswith("IPL2017"):
+            localizations["ipl2017/"+session] = getScoredLocalizations(vid_enc_score_metrics, 1)
+        elif session.startswith("Game "):
+            localizations["cpl2015/"+session] = getScoredLocalizations(vid_enc_score_metrics, 1)
+        else:
+            localizations["hotstar/"+session] = getScoredLocalizations(vid_enc_score_metrics, 1)
+        
 
     save_dir = osp.dirname(args.checkpoint)
     result_file  = osp.basename(args.checkpoint).replace('.pth', '.json')
@@ -151,10 +185,20 @@ def main(args):
         utl.compute_result(args.class_index, dec_score_metrics[step], \
                            dec_target_metrics[step], save_dir, result_file, \
                            ignore_class=[0], save=False, verbose=True)
-        
+    
     #print(localizations)
-    with open("prediction_localizations_TRN_hlVal.json", "w") as fp:
+    with open("prediction_localizations_TRN_mainVal.json", "w") as fp:
         json.dump(localizations, fp)
 
 if __name__ == '__main__':
-    main(parse_args())
+    #main(parse_args())
+    
+    with open("prediction_localizations_TRN_hlVal_C3D17_hidden1024_Th09_ep50.json", "r") as fp:
+        localizations = json.load(fp)
+        
+    i = 60  # optimum
+    filtered_shots = filter_action_segments(localizations, epsilon=i)
+        
+    #print(localizations)
+    with open("prediction_localizations_TRN_mainVal.json", "w") as fp:
+        json.dump(filtered_shots, fp)
